@@ -33,10 +33,17 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.CR_PAT }}
 
+      - name: Gen Tag
+        env:
+          TAG: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        run: |
+          echo "LC_TAG=${TAG,,}" >>${GITHUB_ENV}
+
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
           context: .
           push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          tags: | 
+            ${{ env.LC_TAG }}
+            
