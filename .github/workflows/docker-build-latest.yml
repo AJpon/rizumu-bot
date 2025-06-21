@@ -1,7 +1,6 @@
-name: Build and Publish Docker Manual
+name: Build and Publish Docker on Push
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - master
@@ -31,7 +30,7 @@ jobs:
             "commitId": "${{github.sha}}",
             "ref": "${{github.ref}}",
             "imageName": "${{ env.IMAGE_NAME }}",
-            "trigger": "manual"
+            "trigger": "master"
           }
       #          echo -e "COMMIT_ID=${{ github.sha }}\n" > .imageenv
       - name: Set up Docker Buildx
@@ -51,11 +50,11 @@ jobs:
           echo "LC_TAG=${TAG,,}" >>${GITHUB_ENV}
 
       - name: Build and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: | 
+          platforms: ${{ matrix.platform }}
+          tags: |
             ${{ env.LC_TAG }}:latest
             ${{ env.LC_TAG }}:${{ github.sha }}
-            
