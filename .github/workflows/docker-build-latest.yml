@@ -53,7 +53,7 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
           tags: |
             type=ref,event=branch
-            type=sha,format=sha,prefix=
+            type=sha,format=long,prefix=
             type=sha,format=short,prefix=
           flavor: latest
 
