@@ -1,19 +1,26 @@
-name: Build and Publish Docker Manual
+name: Build and Publish Docker on Push
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - master
 
 jobs:
   build_and_push:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
     env:
       IMAGE_NAME: rizumu-bot
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: write imageenv file
         shell: bash
@@ -23,14 +30,14 @@ jobs:
             "commitId": "${{github.sha}}",
             "ref": "${{github.ref}}",
             "imageName": "${{ env.IMAGE_NAME }}",
-            "trigger": "manual"
+            "trigger": "master"
           }
       #          echo -e "COMMIT_ID=${{ github.sha }}\n" > .imageenv
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -43,11 +50,11 @@ jobs:
           echo "LC_TAG=${TAG,,}" >>${GITHUB_ENV}
 
       - name: Build and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: | 
+          platforms: ${{ matrix.platform }}
+          tags: |
             ${{ env.LC_TAG }}:latest
             ${{ env.LC_TAG }}:${{ github.sha }}
-            
