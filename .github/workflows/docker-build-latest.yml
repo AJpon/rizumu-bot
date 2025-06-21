@@ -10,6 +10,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64
         include:
           - platform: linux/amd64
             runner: ubuntu-latest
@@ -43,11 +46,16 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.CR_PAT }}
 
-      - name: Gen Tag
-        env:
-          TAG: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
-        run: |
-          echo "LC_TAG=${TAG,,}" >>${GITHUB_ENV}
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=sha,format=sha,prefix=
+            type=sha,format=short,prefix=
+          flavor: latest
 
       - name: Build and push
         uses: docker/build-push-action@v5
@@ -55,6 +63,5 @@ jobs:
           context: .
           push: true
           platforms: ${{ matrix.platform }}
-          tags: |
-            ${{ env.LC_TAG }}:latest
-            ${{ env.LC_TAG }}:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
