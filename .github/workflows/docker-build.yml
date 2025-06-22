@@ -3,6 +3,9 @@ name: Build and Publish Docker Manual
 on:
   workflow_dispatch:
 
+env:
+  IMAGE_NAME: rizumu-bot
+
 jobs:
   build_and_push_images:
     strategy:
@@ -16,8 +19,6 @@ jobs:
             runner: ubuntu-24.04-arm
             arch: arm64
     runs-on: ${{ matrix.runner }}
-    env:
-      IMAGE_NAME: rizumu-bot
     steps:
       - name: checkout
         uses: actions/checkout@v4
